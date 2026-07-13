@@ -1,0 +1,12 @@
+{
+  "name": "skinyz-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SKINYZ — DJ · web oficial de booking",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
