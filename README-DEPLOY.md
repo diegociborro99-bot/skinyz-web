@@ -1,35 +1,37 @@
 # SKINYZ — Deploy a Railway
 
-Carpeta lista para desplegar. La web es `index.html` y `server.js` la sirve (Node puro, sin dependencias, build en segundos).
+La web es `index.html` y `server.js` la sirve (Node puro, sin dependencias) y además envía los correos de booking.
 
-## Antes de desplegar (1 minuto)
+## Correos con plantilla SKINYZ (Resend)
 
-1. Abre `index.html` y busca `ARTIST_EMAIL` (línea marcada con ⚠️). Cambia `BOOKING@SKINYZ.COM` por el correo real del artista.
-2. Tras el primer envío del formulario, FormSubmit mandará un correo de activación a esa dirección: hay que pulsar el enlace una vez y listo.
+El servidor trae el endpoint `/api/booking` que envía dos correos HTML con la estética de la web: la solicitud a David (con "responder" directo al cliente) y la confirmación al cliente. Variables en Railway → tu servicio → **Variables**:
 
-## Opción A — Railway CLI (recomendada, ~2 min)
+| Variable | Valor | Obligatoria |
+|---|---|---|
+| `RESEND_API_KEY` | API key de [resend.com](https://resend.com) (gratis, 100 correos/día) | Sí, para las plantillas |
+| `MANAGER_EMAIL` | Correo de David, el manager (por defecto `david@skinyz.com`) | No |
+| `FROM_EMAIL` | `SKINYZ <booking@skinyz.com>` una vez verificado el dominio | No |
+
+Pasos: cuenta en resend.com → API Keys → crear clave → pegarla en Railway como `RESEND_API_KEY` → redeploy.
+
+**Importante (Resend):** sin dominio verificado, Resend solo entrega al correo del dueño de la cuenta. Para que la confirmación llegue a cualquier cliente: Resend → Domains → añadir `skinyz.com` → crear los registros DNS que indique → poner `FROM_EMAIL` = `SKINYZ <booking@skinyz.com>`.
+
+**Mientras no haya `RESEND_API_KEY`**, la web usa FormSubmit automáticamente (tabla simple a David + texto plano al cliente). Su activación: el primer envío manda un enlace a david@skinyz.com — un clic, una vez.
+
+## Desplegar / actualizar
+
+Con el repo `diegociborro99-bot/skinyz-web` conectado a Railway, cada push despliega:
 
 ```bash
-npm i -g @railway/cli
-cd skinyz-deploy
-railway login
-railway init          # crea el proyecto (dale un nombre: skinyz)
-railway up            # sube y despliega
+cd ~/Desktop/skinyz-deploy
+git add . && git commit -m "emails con plantilla SKINYZ" && git push
 ```
 
-Cuando termine: en el dashboard de Railway → tu servicio → **Settings → Networking → Generate Domain**. Te dará una URL tipo `skinyz-production.up.railway.app`.
+URL pública: Settings → Networking → Generate Domain. Dominio propio: Custom Domain + CNAME.
 
-## Opción B — Desde GitHub
+## Probar los correos en local (opcional)
 
-1. Sube esta carpeta a un repositorio de GitHub.
-2. En [railway.com](https://railway.com): **New Project → Deploy from GitHub repo** → elige el repo.
-3. Railway detecta Node y arranca con `node server.js` automáticamente.
-4. **Settings → Networking → Generate Domain** para tener URL pública.
-
-## Dominio propio (opcional)
-
-En **Settings → Networking → Custom Domain** añade `skinyz.com` (o el que compréis) y crea el registro CNAME que te indique Railway en el proveedor del dominio.
-
-## Actualizar la web más adelante
-
-Sustituye `index.html` por la nueva versión y vuelve a ejecutar `railway up` (opción A) o haz push al repo (opción B).
+```bash
+RESEND_API_KEY=re_xxxx node server.js
+# y abre http://localhost:3000
+```

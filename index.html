@@ -51,7 +51,7 @@ button{font-family:inherit}
 
 .top{
   display:flex;justify-content:space-between;align-items:center;
-  padding:clamp(12px,2vh,20px) clamp(16px,3vw,30px);
+  padding:calc(clamp(12px,2vh,20px) + env(safe-area-inset-top)) clamp(16px,3vw,30px) clamp(12px,2vh,20px);
 }
 .kicker{
   font-family:'Unbounded';font-weight:500;font-size:.62rem;letter-spacing:.3em;
@@ -203,9 +203,10 @@ form{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 label{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500}
 input,textarea{
   background:rgba(5,10,18,.65);border:1px solid var(--line);border-radius:10px;
-  padding:12px 14px;color:var(--text);font-family:inherit;font-size:.95rem;width:100%;
+  padding:12px 14px;color:var(--text);font-family:inherit;font-size:1rem;width:100%;
   transition:border-color .25s var(--ease),box-shadow .25s var(--ease);
 }
+/* 16px mínimo: evita que iOS haga zoom al enfocar el campo */
 textarea{resize:vertical;min-height:96px}
 input:focus,textarea:focus{outline:none;border-color:rgba(71,214,255,.6);box-shadow:0 0 0 3px rgba(71,214,255,.12)}
 input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:rgba(255,110,130,.6)}
@@ -239,6 +240,13 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:rgba(255,1
 @media (max-width:640px){
   form{grid-template-columns:1fr}
   .kicker{font-size:.55rem;letter-spacing:.22em}
+  .socials a{width:44px;height:44px}          /* target táctil cómodo */
+  .socials svg{width:18px;height:18px}
+  .tagline{letter-spacing:.26em;text-indent:.26em}
+  .desktop-hint{display:none}                 /* en táctil no hay teclado */
+  .credit{font-size:.54rem;right:10px}
+  .form-foot .btn-primary{width:100%;min-width:0}
+  .perk{font-size:.72rem;padding:7px 12px}
 }
 @media (max-height:560px){
   body{overflow:auto}
@@ -309,7 +317,7 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:rgba(255,1
   <div class="gamestrip rise" style="animation-delay:.7s">
     <div class="strip-head">
       <h2>ISI RUN <span>◆</span></h2>
-      <p class="game-hint"><kbd>Espacio</kbd> / <kbd>↑</kbd> o toque para saltar</p>
+      <p class="game-hint"><span class="desktop-hint"><kbd>Espacio</kbd> / <kbd>↑</kbd> o </span>toca para saltar</p>
     </div>
     <canvas id="game" aria-label="Isi Run: el dinosaurio con la cara de SKINYZ salta cactus, al estilo del dino de Chrome. Pulsa espacio o toca para jugar."></canvas>
   </div>
@@ -386,13 +394,12 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:rgba(255,1
 <script>
 'use strict';
 /* =====================================================
-   ⚠️ CONFIGURACIÓN — CAMBIAR AQUÍ EL CORREO DEL ARTISTA
-   El formulario usa FormSubmit.co (gratis, sin backend).
-   1) Pon el correo real del artista abajo.
-   2) El PRIMER envío llegará con un enlace de activación
-      a ese correo: hay que pulsarlo una vez.
+   ⚠️ CONFIGURACIÓN — correo de booking: David (manager).
+   Contacto directo, mailto y destino del formulario
+   (fallback FormSubmit). El PRIMER envío por FormSubmit
+   manda un enlace de activación a este correo: un clic.
    ===================================================== */
-const ARTIST_EMAIL = 'BOOKING@SKINYZ.COM';
+const BOOKING_EMAIL = 'david@skinyz.com';
 
 // [LOGIC-START] — lógica pura testeada en test_skinyz.js
 const CFG = {
@@ -501,6 +508,18 @@ function damp(cur, target, lambda, dt) {
   return cur + (target - cur) * (1 - Math.exp(-lambda * dt));
 }
 
+function spinGate(cur, idleFor, dragging, dt) {
+  const target = (!dragging && idleFor > 3.5) ? 1 : 0;
+  return damp(cur, target, target ? 1.2 : 7, dt);
+}
+
+function wanderRates(t) {
+  // sinusoides de frecuencias irracionales: deriva suave, impredecible y acotada
+  const yawRate = 0.6 * Math.sin(t * 0.11 + 1.3) + 0.4 * Math.sin(t * 0.043 + 4.1);
+  const pitch = 0.22 * Math.sin(t * 0.071 + 2.2) + 0.10 * Math.sin(t * 0.029);
+  return { yawRate, pitch };
+}
+
 function squashScale(vy, onGround, sinceLand) {
   if (!onGround) {
     const s = Math.min(0.18, Math.abs(vy) / 4200);
@@ -543,9 +562,9 @@ function lifeFactor(t, fadeIn, hold, fadeOut, rest) {
 
 /* ==================== modal de contratación ==================== */
 (function bookingUI() {
-  document.querySelectorAll('[data-email]').forEach((el) => { el.textContent = ARTIST_EMAIL.toLowerCase(); });
+  document.querySelectorAll('[data-email]').forEach((el) => { el.textContent = BOOKING_EMAIL.toLowerCase(); });
   document.querySelectorAll('[data-email-link]').forEach((el) => {
-    el.href = 'mailto:' + ARTIST_EMAIL + '?subject=' + encodeURIComponent('Contratación SKINYZ');
+    el.href = 'mailto:' + BOOKING_EMAIL + '?subject=' + encodeURIComponent('Contratación SKINYZ');
   });
 
   const modal = document.getElementById('bookingModal');
@@ -602,8 +621,22 @@ function lifeFactor(t, fadeIn, hold, fadeOut, rest) {
     status.textContent = 'Enviando…';
     btn.disabled = true; btn.style.opacity = '.6';
 
+    // 1º nuestro servidor (plantillas SKINYZ vía Resend); si no está, FormSubmit
     try {
-      const res = await fetch('https://formsubmit.co/ajax/' + ARTIST_EMAIL, {
+      const r = await fetch('/api/booking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (r.ok) {
+        form.style.display = 'none';
+        document.getElementById('formSuccess').classList.add('on');
+        return;
+      }
+    } catch (e) { /* sin backend (p. ej. abierto como archivo): probamos FormSubmit */ }
+
+    try {
+      const res = await fetch('https://formsubmit.co/ajax/' + BOOKING_EMAIL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({
@@ -625,8 +658,8 @@ function lifeFactor(t, fadeIn, hold, fadeOut, rest) {
     } catch (err) {
       btn.disabled = false; btn.style.opacity = '1';
       status.classList.add('bad');
-      status.innerHTML = 'No se pudo enviar. Escríbenos directo: <a href="mailto:' + ARTIST_EMAIL +
-        '?subject=' + encodeURIComponent('Contratación SKINYZ') + '">' + ARTIST_EMAIL.toLowerCase() + '</a>';
+      status.innerHTML = 'No se pudo enviar. Escríbenos directo: <a href="mailto:' + BOOKING_EMAIL +
+        '?subject=' + encodeURIComponent('Contratación SKINYZ') + '">' + BOOKING_EMAIL.toLowerCase() + '</a>';
     }
   });
 })();
@@ -1172,7 +1205,7 @@ if (renderer) {
   const sparkHolder = new THREE.Group();
   scene.add(sparkHolder);
 
-  const N_GEMS = 9, TILT = 0.24, ORBIT_SPEED = 0.22;
+  const N_GEMS = isMobile ? 6 : 9, TILT = 0.24, ORBIT_SPEED = 0.22;
   let orbitA = 3.6, orbitB = 1.15;
   const gems = [];
   for (let i = 0; i < N_GEMS; i++) {
@@ -1304,6 +1337,7 @@ if (renderer) {
   let lastPX = 0, lastPY = 0;
   let userRX = 0, userRY = 0, tgtRX = 0, tgtRY = 0, velRX = 0, velRY = 0;
   let lastTouchT = -10;
+  let spinOn = 1; // el giro planetario arranca activo desde el primer frame
 
   function raycastAt(cxs, cys) {
     ndc.set((cxs / window.innerWidth) * 2 - 1, -(cys / window.innerHeight) * 2 + 1);
@@ -1405,11 +1439,13 @@ if (renderer) {
       g.mesh.scale.setScalar(g.base * g.cur * Math.max(f, 0.0001));
     }
 
-    // rotación del nombre: la del usuario + retorno elástico + respiración
+    // rotación del nombre: giro planetario errante + la del usuario encima
     const idleFor = t - lastTouchT;
+    spinOn = spinGate(spinOn, idleFor, !!dragging, dt);
+    const w = wanderRates(t);
+    tgtRY += 0.09 * w.yawRate * spinOn * dt;          // guiñada que cambia de dirección sola
     if (!dragging && idleFor > 3.5) {
-      tgtRX = damp(tgtRX, 0, 1.1, dt);
-      tgtRY = damp(tgtRY, 0, 1.1, dt);
+      tgtRX = damp(tgtRX, w.pitch * spinOn, 1.1, dt); // cabeceo ondulante, siempre legible
     }
     userRX = damp(userRX, tgtRX, 9, dt);
     userRY = damp(userRY, tgtRY, 9, dt);
