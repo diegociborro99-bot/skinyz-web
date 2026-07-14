@@ -182,20 +182,8 @@ kbd{
   cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;
   image-rendering:pixelated;
 }
-/* centrado bajo el juego, con el estilo de etiqueta de la web: visible pero sin robar foco.
-   Brilla suave en los tonos hielo, como un eco del logo */
-.credit{
-  display:block;margin:9px auto 0;text-align:center;
-  font-size:.62rem;letter-spacing:.22em;text-indent:.22em;text-transform:uppercase;
-  background:linear-gradient(100deg,
-    rgba(158,182,204,.85) 0%, rgba(158,182,204,.85) 42%,
-    #d9f4ff 50%, rgba(71,214,255,.95) 54%,
-    rgba(158,182,204,.85) 62%, rgba(158,182,204,.85) 100%);
-  background-size:230% 100%;
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-  animation:sheen 9s linear infinite;
-  filter:drop-shadow(0 0 8px rgba(71,214,255,.18));
-}
+/* el crédito se pinta DENTRO del lienzo del juego (ver drawCredit):
+   así nunca se corta por alto de pantalla ni tapa nada */
 
 /* ---------- modal de contratación ---------- */
 .modal{
@@ -294,7 +282,6 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:rgba(255,1
   .socials svg{width:18px;height:18px}
   .tagline{letter-spacing:.26em;text-indent:.26em}
   .desktop-hint{display:none}                 /* en táctil no hay teclado */
-  .credit{font-size:.56rem;letter-spacing:.18em;text-indent:.18em;margin-top:7px}
   .form-foot .btn-primary{width:100%;min-width:0}
   .perk{font-size:.72rem;padding:7px 12px}
 
@@ -313,6 +300,9 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:rgba(255,1
   .tagline{letter-spacing:.18em;text-indent:.18em}
   .kicker{letter-spacing:.16em}
 }
+@media (max-height:720px){
+  .titlebox{min-height:90px}   /* en pantallas bajas el título cede alto: nada desborda */
+}
 @media (max-height:560px){
   body{overflow:auto}
   .stage{min-height:560px}
@@ -322,7 +312,6 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:rgba(255,1
   .rise{animation:none;opacity:1}
   .panel{animation:none}
   .kicker .dot{animation:none}
-  .credit{animation:none}
   .btn-primary::after{display:none;animation:none}
 }
 </style>
@@ -386,8 +375,7 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:rgba(255,1
       <h2>ISI RUN <span>◆</span></h2>
       <p class="game-hint"><span class="desktop-hint"><kbd>Espacio</kbd> / <kbd>↑</kbd> o </span>toca para saltar</p>
     </div>
-    <canvas id="game" aria-label="Isi Run: el dinosaurio con la cara de SKINYZ salta cactus, al estilo del dino de Chrome. Pulsa espacio o toca para jugar."></canvas>
-    <p class="credit">coded by Highkey Labs</p>
+    <canvas id="game" aria-label="Isi Run: el dinosaurio con la cara de SKINYZ salta cactus, al estilo del dino de Chrome. Pulsa espacio o toca para jugar. Web creada por Highkey Labs."></canvas>
   </div>
 
 </div>
@@ -997,11 +985,38 @@ function lifeFactor(t, fadeIn, hold, fadeOut, rest) {
     cx.fillStyle = INK;
     cx.fillText(String(sc).padStart(5, '0'), W - 16, 24);
 
+    drawCredit();
+
     if (state === 'idle') {
       overlayText('PULSA ESPACIO O TOCA PARA JUGAR', false);
     } else if (state === 'over') {
       overlayText('G A M E  O V E R', true);
     }
+  }
+
+  // crédito dentro del lienzo, bajo la línea de suelo: nunca se corta ni tapa el juego.
+  // Barrido de brillo en los tonos hielo de la web, pintado con gradiente de canvas.
+  const CREDIT = 'CODED BY HIGHKEY LABS';
+  const CREDIT_RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function drawCredit() {
+    cx.save();
+    cx.font = '600 9px "Space Grotesk", monospace';
+    try { cx.letterSpacing = '2px'; } catch (e) {}
+    cx.textAlign = 'center';
+    const w = Math.max(cx.measureText(CREDIT).width, 1);
+    const x0 = W / 2 - w / 2;
+    const p = CREDIT_RM ? 0.5 : (performance.now() / 7000) % 1;
+    const clamp01 = (v) => Math.min(1, Math.max(0, v));
+    const g = cx.createLinearGradient(x0, 0, x0 + w, 0);
+    g.addColorStop(0, 'rgba(158,182,204,.75)');
+    g.addColorStop(clamp01(p - 0.14), 'rgba(158,182,204,.75)');
+    g.addColorStop(clamp01(p), 'rgba(217,244,255,1)');
+    g.addColorStop(clamp01(p + 0.07), 'rgba(71,214,255,.95)');
+    g.addColorStop(clamp01(p + 0.2), 'rgba(158,182,204,.75)');
+    g.addColorStop(1, 'rgba(158,182,204,.75)');
+    cx.fillStyle = g;
+    cx.fillText(CREDIT, W / 2, H - 5);
+    cx.restore();
   }
 
   function overlayText(msg, showRestart) {
