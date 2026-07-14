@@ -1593,7 +1593,7 @@ if (renderer) {
     const idleFor = t - lastTouchT;
     spinOn = spinGate(spinOn, idleFor, !!dragging, dt);
     const w = wanderRates(t);
-    tgtRY += 0.09 * w.yawRate * spinOn * dt;          // guiñada que cambia de dirección sola
+    tgtRY += 0.14 * w.yawRate * spinOn * dt;          // guiñada que cambia de dirección sola
     if (!dragging && idleFor > 3.5) {
       tgtRX = damp(tgtRX, w.pitch * spinOn, 1.1, dt); // cabeceo ondulante, siempre legible
     }
