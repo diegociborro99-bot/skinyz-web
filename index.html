@@ -182,19 +182,19 @@ kbd{
   cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;
   image-rendering:pixelated;
 }
-/* en flujo, bajo el juego: nunca tapa el lienzo ni el botón.
-   Brilla suave en los tonos hielo de la web, como un eco del logo */
+/* centrado bajo el juego, con el estilo de etiqueta de la web: visible pero sin robar foco.
+   Brilla suave en los tonos hielo, como un eco del logo */
 .credit{
-  display:block;max-width:1000px;margin:6px auto 0;text-align:right;
-  font-size:.58rem;letter-spacing:.08em;
+  display:block;margin:9px auto 0;text-align:center;
+  font-size:.62rem;letter-spacing:.22em;text-indent:.22em;text-transform:uppercase;
   background:linear-gradient(100deg,
-    rgba(126,147,168,.55) 0%, rgba(126,147,168,.55) 42%,
-    rgba(168,230,255,.95) 50%, rgba(71,214,255,.8) 54%,
-    rgba(126,147,168,.55) 62%, rgba(126,147,168,.55) 100%);
+    rgba(158,182,204,.85) 0%, rgba(158,182,204,.85) 42%,
+    #d9f4ff 50%, rgba(71,214,255,.95) 54%,
+    rgba(158,182,204,.85) 62%, rgba(158,182,204,.85) 100%);
   background-size:230% 100%;
   -webkit-background-clip:text;background-clip:text;color:transparent;
   animation:sheen 9s linear infinite;
-  filter:drop-shadow(0 0 6px rgba(71,214,255,.12));
+  filter:drop-shadow(0 0 8px rgba(71,214,255,.18));
 }
 
 /* ---------- modal de contratación ---------- */
@@ -294,7 +294,7 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:rgba(255,1
   .socials svg{width:18px;height:18px}
   .tagline{letter-spacing:.26em;text-indent:.26em}
   .desktop-hint{display:none}                 /* en táctil no hay teclado */
-  .credit{font-size:.5rem;margin-top:5px}
+  .credit{font-size:.56rem;letter-spacing:.18em;text-indent:.18em;margin-top:7px}
   .form-foot .btn-primary{width:100%;min-width:0}
   .perk{font-size:.72rem;padding:7px 12px}
 
