@@ -182,10 +182,19 @@ kbd{
   cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;
   image-rendering:pixelated;
 }
-/* en flujo, bajo el juego: nunca tapa el lienzo ni el botón */
+/* en flujo, bajo el juego: nunca tapa el lienzo ni el botón.
+   Brilla suave en los tonos hielo de la web, como un eco del logo */
 .credit{
   display:block;max-width:1000px;margin:6px auto 0;text-align:right;
-  font-size:.58rem;color:rgba(126,147,168,.5);letter-spacing:.08em;
+  font-size:.58rem;letter-spacing:.08em;
+  background:linear-gradient(100deg,
+    rgba(126,147,168,.55) 0%, rgba(126,147,168,.55) 42%,
+    rgba(168,230,255,.95) 50%, rgba(71,214,255,.8) 54%,
+    rgba(126,147,168,.55) 62%, rgba(126,147,168,.55) 100%);
+  background-size:230% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:sheen 9s linear infinite;
+  filter:drop-shadow(0 0 6px rgba(71,214,255,.12));
 }
 
 /* ---------- modal de contratación ---------- */
@@ -313,6 +322,7 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:rgba(255,1
   .rise{animation:none;opacity:1}
   .panel{animation:none}
   .kicker .dot{animation:none}
+  .credit{animation:none}
   .btn-primary::after{display:none;animation:none}
 }
 </style>
