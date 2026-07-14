@@ -1191,6 +1191,8 @@ if (renderer) {
     strip(2.6, 9, 0xeaf6ff, 10, -8, 2, 2, Math.PI / 2.6, 0);   // strip lateral izq
     strip(2.6, 9, 0xdff0ff, 8, 8, 1, 2, -Math.PI / 2.6, 0);    // strip lateral dcha
     strip(1.2, 6, 0xffffff, 20, -3, 3, 6, Math.PI / 5, 0);     // filo especular frontal
+    strip(16, 5, 0xeaf6ff, 3, 0, 1.2, 7.5, 0, 0);              // softbox frontal grande: llena de luz los frentes de las letras
+    strip(12, 4, 0xffffff, 4.5, 0, 5, 6, 0, Math.PI / 3.2);    // cielo frontal inclinado
     strip(5, 5, 0x9fd0ff, 3.5, -5, -3, -7, Math.PI / 8, 0);    // fondo azul frío
     strip(4, 4, 0x2f6ea8, 2.6, 6, -4, -6, -Math.PI / 7, 0);    // fondo azul profundo
     strip(10, 1, 0xffffff, 9, 0, -6.5, 3, 0, Math.PI / 2);     // rebote de suelo
@@ -1280,20 +1282,18 @@ if (renderer) {
   }
   const iceTex = makeIceTextures();
 
+  // metal pulido helado: brillante y con cuerpo, nunca se funde con el fondo oscuro.
+  // (El cristal transmisivo anterior dejaba pasar el fondo negro y en móvil se veía apagado;
+  //  el metal además es mucho más barato de renderizar en el teléfono.)
   const iceMat = new THREE.MeshPhysicalMaterial({
-    color: 0xffffff,           // cristal puro, transparente como los diamantes
-    metalness: 0,
-    roughness: 0.03,
+    color: 0xf2f8ff,           // plata con un aliento de hielo
+    metalness: 0.9,            // el 10% difuso garantiza base luminosa incluso sin reflejo
+    roughness: 0.16,
     normalMap: iceTex.normal,
     normalScale: new THREE.Vector2(0.15, 0.15), // un susurro de talla, nada más
-    transmission: 1,
-    ior: 1.31,                 // índice de refracción del hielo real
-    thickness: 2.6,
-    attenuationColor: new THREE.Color(0xd6ecf7),
-    attenuationDistance: 3.6,  // apenas un aliento azul en la masa
     clearcoat: 1,
-    clearcoatRoughness: 0.03,
-    envMapIntensity: 1.6
+    clearcoatRoughness: 0.05,
+    envMapIntensity: isMobile ? 2.4 : 2
   });
 
 
