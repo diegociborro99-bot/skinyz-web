@@ -182,9 +182,10 @@ kbd{
   cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;
   image-rendering:pixelated;
 }
+/* en flujo, bajo el juego: nunca tapa el lienzo ni el botón */
 .credit{
-  position:fixed;right:14px;bottom:calc(6px + env(safe-area-inset-bottom));
-  font-size:.6rem;color:rgba(126,147,168,.55);letter-spacing:.08em;z-index:2;
+  display:block;max-width:1000px;margin:6px auto 0;text-align:right;
+  font-size:.58rem;color:rgba(126,147,168,.5);letter-spacing:.08em;
 }
 
 /* ---------- modal de contratación ---------- */
@@ -284,7 +285,7 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:rgba(255,1
   .socials svg{width:18px;height:18px}
   .tagline{letter-spacing:.26em;text-indent:.26em}
   .desktop-hint{display:none}                 /* en táctil no hay teclado */
-  .credit{font-size:.54rem;right:10px}
+  .credit{font-size:.5rem;margin-top:5px}
   .form-foot .btn-primary{width:100%;min-width:0}
   .perk{font-size:.72rem;padding:7px 12px}
 
@@ -376,11 +377,10 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:rgba(255,1
       <p class="game-hint"><span class="desktop-hint"><kbd>Espacio</kbd> / <kbd>↑</kbd> o </span>toca para saltar</p>
     </div>
     <canvas id="game" aria-label="Isi Run: el dinosaurio con la cara de SKINYZ salta cactus, al estilo del dino de Chrome. Pulsa espacio o toca para jugar."></canvas>
+    <p class="credit">coded by Highkey Labs</p>
   </div>
 
 </div>
-
-<span class="credit">coded by Highkey Labs</span>
 
 <!-- ============ MODAL CONTRATACIÓN ============ -->
 <div class="modal" id="bookingModal" role="dialog" aria-modal="true" aria-labelledby="bookingTitle">
